@@ -15,12 +15,13 @@ stoi = {s: i + 1 for i, s in enumerate(chars)}
 stoi["."] = 0
 itos = {i: s for s, i in stoi.items()}
 
-for w in words[:]:
+for w in words:
     chs = ["."] + list(w) + ["."]
     for c1, c2 in zip(chs, chs[1:]):
         ix1 = stoi[c1]
         ix2 = stoi[c2]
         N[ix1, ix2] += 1
+        # print(c1, c2)
 
 
 def showPlt():
@@ -34,6 +35,8 @@ def showPlt():
     plt.axis("off")
     plt.show()
 
+
+# showPlt()
 
 P = (N + 1).float()
 P /= P.sum(1, keepdim=True)
@@ -67,5 +70,4 @@ for w in words:
         loglikehood += logprob
         n += 1
         # print(f"{c1,c2}: {prob:.4f}: {logprob:.4f}")
-print(f"{-loglikehood=}")
 print(f"loss={-loglikehood/n}")
