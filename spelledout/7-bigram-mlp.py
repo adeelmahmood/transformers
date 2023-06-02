@@ -56,7 +56,7 @@ Xte, Yte = build_dataset(words[n2:])
 
 C = torch.randn((27, emb_space_size), generator=g)
 W1 = torch.randn((block_size * emb_space_size, n_hidden), generator=g) * (
-    (5 / 3) / 10**block_size * emb_space_size
+    (5 / 3) / (block_size * emb_space_size) ** 0.5
 )
 b1 = torch.randn(n_hidden, generator=g) * 0.01
 W2 = torch.randn((n_hidden, 27), generator=g) * 0.01
@@ -88,7 +88,7 @@ for i in range(max_steps):
     # batch norm
     bnmeani = hpreact.mean(0, keepdim=True)
     bnstdi = hpreact.std(0, keepdim=True)
-    hpreact = bngain * (hpreact - bnmeani) / bnstdi * bnbias
+    hpreact = bngain * (hpreact - bnmeani) / bnstdi + bnbias
 
     with torch.no_grad():
         bnmean_running = 0.999 * bnmean_running + 0.001 * bnmeani
@@ -120,7 +120,7 @@ with torch.no_grad():
     # total loss
     emb = C[Xtr]
     hpreact = emb.view(-1, block_size * emb_space_size) @ W1 + b1
-    hpreact = bngain * (hpreact - bnmean_running) / bnstd_running * bnbias
+    hpreact = bngain * (hpreact - bnmean_running) / bnstd_running + bnbias
     h = torch.tanh(hpreact)
     logits = h @ W2 + b2
     loss = F.cross_entropy(logits, Ytr)
@@ -128,7 +128,7 @@ with torch.no_grad():
 
     emb = C[Xdev]
     hpreact = emb.view(-1, block_size * emb_space_size) @ W1 + b1
-    hpreact = bngain * (hpreact - bnmean_running) / bnstd_running * bnbias
+    hpreact = bngain * (hpreact - bnmean_running) / bnstd_running + bnbias
     h = torch.tanh(hpreact)
     logits = h @ W2 + b2
     loss = F.cross_entropy(logits, Ydev)
@@ -160,7 +160,7 @@ for _ in range(10):
     while True:
         emb = C[torch.tensor([context])]
         hpreact = emb.view(1, -1) @ W1  # + b1
-        hpreact = bngain * (hpreact - bnmean_running) / bnstd_running * bnbias
+        hpreact = bngain * (hpreact - bnmean_running) / bnstd_running + bnbias
         h = torch.tanh(hpreact)
         logits = h @ W2 + b2
         probs = F.softmax(logits, dim=1)
